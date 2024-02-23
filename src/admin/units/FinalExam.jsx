@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import NavA from "../NavA";
 import Axios from "axios";
 
+const server_url = import.meta.env.VITE_SERVER_LINK;
+
 const FinalExam = () => {
   const [studentData, setStudentData] = useState([]);
   const { sectionID } = useParams();
@@ -12,7 +14,7 @@ const FinalExam = () => {
     const fetchStudentData = async () => {
       try {
         const response = await Axios.get(
-          `http://localhost:3001/api/studentList?sectionID=${sectionID}`
+          `${server_url}/api/studentList?sectionID=${sectionID}`
         );
         setStudentData(response.data);
       } catch (error) {
