@@ -263,7 +263,9 @@ const Dashboard = () => {
                 <th className='section-th' style={{ textAlign: "center" }}>
                   Section Name
                 </th>
-                <th className='th-control'></th>
+                <th className='th-control'>
+                  <img style={{ width: "35px" }} src={Setting} alt='Setting' />
+                </th>
               </tr>
             </thead>
             <tbody>
