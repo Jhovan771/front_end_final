@@ -307,7 +307,7 @@ const Dashboard = () => {
           <div className='modal-all'>
             <div className='modal-body'>
               <button className='btn2 btn2-open' onClick={openModal}>
-                A D D S E C T I O N
+                ADD SECTION
               </button>
               {isModalVisible && (
                 <section className='modal'>
