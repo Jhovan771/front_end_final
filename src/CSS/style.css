@@ -445,6 +445,7 @@ nav ul li a.active {
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100%;
 }
 .td-control {
   display: flex;
