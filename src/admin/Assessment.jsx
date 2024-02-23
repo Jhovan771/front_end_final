@@ -190,7 +190,7 @@ const Assessment = () => {
             </div>
             <div className='assessment-box-2'>
               <div className='box-for-stories'>
-                <div style={{ maxHeight: " 580px", overflow: "auto" }}>
+                <div style={{ maxHeight: " 380px", overflow: "auto" }}>
                   <table className='table-main-wrapper'>
                     <thead>
                       <tr>
