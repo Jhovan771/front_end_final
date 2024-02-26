@@ -16,7 +16,7 @@ const About = () => {
               <span className='ATitle'>Leader</span>
               <span className='AQoute'>
                 “The road to success and the road to failure are almost exactly
-                the same.” —Colin R. Davis
+                the same.” —Colin R.
               </span>
             </div>
             <div className='content-control'>
