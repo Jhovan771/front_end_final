@@ -15,8 +15,8 @@ const About = () => {
               <span className='AName-control'>Jay Ann Robles</span>
               <span className='ATitle'>Leader</span>
               <span className='AQoute'>
-                “We cannot solve problems with the kind of thinking we employed
-                when we came up with them.” - Albert Einstein
+                “The road to success and the road to failure are almost exactly
+                the same.” —Colin R. Davis
               </span>
             </div>
             <div className='content-control'>
@@ -24,9 +24,8 @@ const About = () => {
               <span className='AName-control'>Amefie Fabro</span>
               <span className='ATitle'>Member</span>
               <span className='AQoute'>
-                “Stay away from those people who try to disparage your
-                ambitions. Small minds will always do that, but great minds will
-                give you a feeling that you can become great too.” — Mark Twain
+                “It is better to fail in originality than to succeed in
+                imitation.” —Herman Melville
               </span>
             </div>
             <div className='content-control'>
