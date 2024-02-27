@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import NavA from "../NavA";
 import Axios from "axios";
@@ -11,12 +11,12 @@ const Examination = () => {
   const [totalScore, setTotalScore] = useState(0);
   const [stories, setStories] = useState([]);
   const [storyDetails, setStoryDetails] = useState(null);
+  const utteranceRef = useRef(null);
   const [studentData, setStudentData] = useState({
     id: "",
     firstName: "",
     lastName: "",
   });
-
   const [graphData, setGraphData] = useState({
     labels: [],
     datasets: [
@@ -28,6 +28,12 @@ const Examination = () => {
       },
     ],
   });
+
+  const stopReadingAloud = () => {
+    if (utteranceRef.current) {
+      speechSynthesis.cancel();
+    }
+  };
 
   const fetchDataForGraph = useCallback(async () => {
     try {
@@ -117,12 +123,9 @@ const Examination = () => {
     const cleanedWord = word.toLowerCase();
 
     if (cleanedTranscript === cleanedWord) {
-      // Pronunciation is correct
-      // Increment total score
       setTotalScore((prevScore) => prevScore + 1);
       setFeedback("Correct pronunciation");
     } else {
-      // Pronunciation is wrong
       setFeedback("Wrong pronunciation");
     }
 
@@ -132,7 +135,15 @@ const Examination = () => {
   const readAloud = () => {
     if (storyDetails?.content) {
       const fullText = `${storyDetails.title}. ${storyDetails.content}`;
-      const utterance = new SpeechSynthesisUtterance(fullText);
+      const wordsToPronounce = storyDetails.words || [];
+
+      let textWithBlanks = fullText;
+      wordsToPronounce.forEach((word) => {
+        const regex = new RegExp(word, "gi");
+        textWithBlanks = textWithBlanks.replace(regex, "Blank");
+      });
+
+      const utterance = new SpeechSynthesisUtterance(textWithBlanks);
       speechSynthesis.speak(utterance);
     }
   };
@@ -140,14 +151,20 @@ const Examination = () => {
   const handleSelect = async (selectedStoryId) => {
     try {
       console.log("Story ID:", selectedStoryId);
+      stopReadingAloud();
+
       const response = await fetch(
         `${server_url}/fetch-story/${selectedStoryId}`
       );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch story details");
+      }
+
       const data = await response.json();
       setStoryDetails(data);
     } catch (error) {
       console.error("Error Fetching Story Details:", error);
-
       if (error.response) {
         console.log("Full Response:", await error.response.text());
       }
@@ -316,7 +333,9 @@ const Examination = () => {
                             style={{
                               textAlign: "center",
                               margin: "5px",
+                              fontSize: "18px",
                               textTransform: "uppercase",
+                              backgroundColor: "#F5FEFD",
                             }}
                             disabled
                           />
@@ -343,16 +362,16 @@ const Examination = () => {
             </div>
           </div>
           <div className='cont-wrapper-2'>
-            <div className='stories-content'>
+            <div
+              className='stories-content'
+              style={{ display: "flex", flexDirection: "column" }}>
               <div className='stories-wrapper'>
                 <p className='ttl-wrapper'>{storyDetails?.title}</p>
                 <p className='cntnt-wrapper'>{storyDetails?.content}</p>
-                <button
-                  className='class-test-button-control'
-                  onClick={readAloud}>
-                  READ ALOUD
-                </button>
               </div>
+              <button className='class-test-button-control' onClick={readAloud}>
+                READ ALOUD
+              </button>
             </div>
 
             <div className='graph-for-score'>
