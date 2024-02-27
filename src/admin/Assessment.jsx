@@ -23,12 +23,17 @@ const Assessment = () => {
   };
 
   const handleSubmit = async () => {
+    // Fetch the UserID and token from local storage
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
+
     const response = await fetch(`${server_url}/submit-story`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Include the JWT token in the Authorization header
       },
-      body: JSON.stringify({ title, content, addedWords }),
+      body: JSON.stringify({ title, content, addedWords, userId }), // Include userId in the request body
     });
 
     if (response.ok) {
@@ -47,7 +52,17 @@ const Assessment = () => {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const response = await fetch(`${server_url}/get-stories`);
+        // Fetch the token from local storage
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(`${server_url}/get-stories`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Include the JWT token in the Authorization header
+          },
+        });
+
         if (response.ok) {
           const storiesData = await response.json();
           setStories(storiesData);
