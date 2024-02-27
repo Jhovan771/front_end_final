@@ -134,7 +134,7 @@ const Assessment = () => {
                 style={{ width: "100%" }}>
                 <textarea
                   className='input-for-story'
-                  placeholder='NOTE: Dont include the words you want to be pronounced.'
+                  placeholder='INPUT STORY HERE'
                   name=''
                   id=''
                   cols='40'
