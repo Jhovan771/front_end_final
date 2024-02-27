@@ -133,10 +133,13 @@ const Dashboard = () => {
 
       console.log(response.data);
 
-      if (response.data.trim() === "data inserted successfully") {
+      if (
+        response.status === 200 &&
+        response.data.trim() === "Data inserted successfully."
+      ) {
         alert("Successfully added to the list!");
       } else {
-        alert("Successfully added to the list!");
+        alert("Failed to add to the list.");
       }
     } catch (error) {
       console.error(error);
