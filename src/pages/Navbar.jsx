@@ -5,7 +5,7 @@ const Navbar = () => {
     <div className='body'>
       <div className='header'>
         <div className='logo'>
-          <h3>Logo</h3>
+          <h3>Speak Wise</h3>
         </div>
         <input type='checkbox' id='nav_check' hidden />
         <nav>
