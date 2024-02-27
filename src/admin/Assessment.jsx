@@ -108,18 +108,22 @@ const Assessment = () => {
       return;
     }
 
-    const response = await fetch(`${server_url}/delete-story/${storyId}`, {
-      method: "DELETE",
-    });
+    try {
+      const response = await fetch(`${server_url}/delete-story/${storyId}`, {
+        method: "DELETE",
+      });
 
-    if (response.ok) {
-      console.log("Story deleted successfully.");
-      const updatedStories = stories.filter(
-        (story) => story.stories_id !== storyId
-      );
-      setStories(updatedStories);
-    } else {
-      console.error("Error deleting story.");
+      if (response.ok) {
+        console.log("Story deleted successfully.");
+        const updatedStories = stories.filter(
+          (story) => story.stories_id !== storyId
+        );
+        setStories(updatedStories);
+      } else {
+        console.error("Error deleting story.");
+      }
+    } catch (error) {
+      console.error("Error deleting story:", error);
     }
   };
 

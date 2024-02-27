@@ -174,7 +174,15 @@ const Examination = () => {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const response = await fetch(`${server_url}/get-stories`);
+        const token = localStorage.getItem("token"); // Retrieve JWT token from local storage
+
+        const response = await fetch(`${server_url}/get-stories`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`, // Include JWT token in the request headers
+          },
+        });
+
         if (response.ok) {
           const storiesData = await response.json();
           console.log("Stories Data:", storiesData);
