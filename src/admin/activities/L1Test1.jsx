@@ -16,6 +16,8 @@ const L1Test1 = () => {
   const { sectionID } = useParams();
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [score, setScore] = useState(0);
+  const [attempts, setAttempts] = useState({});
+  const [disabled, setDisabled] = useState(false);
 
   useEffect(() => {
     const allItemsAnswered = quizItemsCorrectness.every((item) => item !== "");
@@ -117,17 +119,47 @@ const L1Test1 = () => {
 
   const fetchStudentById = async (studentID) => {
     try {
+      console.log("Fetching student by ID:", studentID);
+
       if (selectedStudent) {
+        console.log(
+          "Updating total score for previous student:",
+          selectedStudent.id
+        );
         updateTotalScore(selectedStudent.id, score);
       }
 
       setScore(0);
       setQuizItemsCorrectness(Array(wordData.length).fill(""));
 
+      const currentAttempt = (attempts[studentID] || 0) + 1; // Get the current attempt
+      console.log("Current attempt for student:", currentAttempt);
+
       const response = await Axios.get(
         `${server_url}/api/student?studentID=${studentID}`
       );
       setSelectedStudent(response.data);
+
+      // Check number of attempts and disable "Take" button accordingly
+      if (currentAttempt >= 4) {
+        alert("Maximum attempts reached for this student.");
+        console.log("Maximum attempts reached for student:", studentID);
+        return;
+      }
+
+      setAttempts((prevAttempts) => ({
+        ...prevAttempts,
+        [studentID]: currentAttempt, // Update the attempt count for the selected student
+      }));
+
+      if (currentAttempt >= 4 || score >= 4) {
+        setDisabled(true);
+        console.log("Record button disabled");
+      } else {
+        // Enable the record button if attempts are not maxed out and score is less than 3
+        setDisabled(false);
+        console.log("Record button enabled");
+      }
     } catch (error) {
       console.error(error);
       alert("An error occurred while fetching student data.");
@@ -144,6 +176,51 @@ const L1Test1 = () => {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const recordScore = () => {
+    if (!selectedStudent) return; // Ensure a student is selected
+
+    console.log("Recording score for student:", selectedStudent.id);
+
+    const currentAttempts = attempts[selectedStudent.id];
+
+    // Check if attempts are maxed out or score is 3 or above for the selected student
+    if (currentAttempts >= 4 || score >= 4) {
+      setDisabled(true);
+      console.log("Attempts maxed out or score >= 3");
+    } else {
+      // Increment attempts if not maxed out for the selected student
+      const newAttempts = currentAttempts + 0;
+
+      // Calculate the new score only if it's less than 3 for the selected student
+      const newScore = score;
+      const scorePercentage = (newScore / 4) * 100;
+
+      // Store the new score percentage for the current attempt in local storage
+      console.log("Storing new score in local storage:", scorePercentage);
+      localStorage.setItem(
+        `${selectedStudent.id}_attempt_${newAttempts}`,
+        scorePercentage
+      );
+
+      // Update the state with new score and attempt count
+      setAttempts((prevAttempts) => ({
+        ...prevAttempts,
+        [selectedStudent.id]: newAttempts,
+      }));
+      setScore(newScore);
+
+      console.log("Updated score:", newScore);
+
+      if (newAttempts >= 4) {
+        setDisabled(true);
+      }
+    }
+  };
+
+  const handleSubmit = () => {
+    alert("Successfully submitted. Everything up to date.");
   };
 
   return (
@@ -169,7 +246,7 @@ const L1Test1 = () => {
                 <button
                   className='class-test-button-control'
                   onClick={readAloud}>
-                  Read Aloud
+                  Listen
                 </button>
               </div>
               <div className='class-test-box-4'>
@@ -179,11 +256,13 @@ const L1Test1 = () => {
                       <th>ID</th>
                       <th>First Name</th>
                       <th>Last Name</th>
-                      <th>%</th>
+                      <th>Attempt 1</th>
+                      <th>Attempt 2</th>
+                      <th>Attempt 3</th>
                       <th>Menu</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody style={{ msOverflowY: "auto" }}>
                     {studentData.map((student, index) => (
                       <tr key={student.id}>
                         <td
@@ -210,18 +289,74 @@ const L1Test1 = () => {
                           }}>
                           {student.lastName}
                         </td>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            backgroundColor: "white",
-                            color: "black",
-                            display: "flex",
-                            height: "100%",
-                          }}>
-                          {/* wllplyd */}
-                          <div className='progress-bar'>{`${
-                            (student.total_score / 120) * 100
-                          }%`}</div>
+                        <td>
+                          <td
+                            style={{
+                              textAlign: "center",
+                              backgroundColor: "white",
+                              color: "black",
+                              display: "flex",
+                              width: "100%",
+                            }}>
+                            {/* Display Attempt 1 score */}
+                            <div className='progress-bar'>
+                              {console.log(
+                                "Attempt 1 score:",
+                                localStorage.getItem(`${student.id}_attempt_1`)
+                              )}
+                              {`${
+                                localStorage.getItem(
+                                  `${student.id}_attempt_1`
+                                ) || 0
+                              }%`}
+                            </div>
+                          </td>
+                        </td>
+                        <td>
+                          <td
+                            style={{
+                              textAlign: "center",
+                              backgroundColor: "white",
+                              color: "black",
+                              display: "flex",
+                              width: "100%",
+                            }}>
+                            {/* Display Attempt 2 score */}
+                            <div className='progress-bar'>
+                              {console.log(
+                                "Attempt 2 score:",
+                                localStorage.getItem(`${student.id}_attempt_2`)
+                              )}
+                              {`${
+                                localStorage.getItem(
+                                  `${student.id}_attempt_2`
+                                ) || 0
+                              }%`}
+                            </div>
+                          </td>
+                        </td>
+                        <td>
+                          <td
+                            style={{
+                              textAlign: "center",
+                              backgroundColor: "white",
+                              color: "black",
+                              display: "flex",
+                              width: "100%",
+                            }}>
+                            {/* Display Attempt 3 score */}
+                            <div className='progress-bar'>
+                              {console.log(
+                                "Attempt 3 score:",
+                                localStorage.getItem(`${student.id}_attempt_3`)
+                              )}
+                              {`${
+                                localStorage.getItem(
+                                  `${student.id}_attempt_3`
+                                ) || 0
+                              }%`}
+                            </div>
+                          </td>
                         </td>
                         <td
                           style={{
@@ -229,10 +364,22 @@ const L1Test1 = () => {
                             backgroundColor: "white",
                             color: "black",
                           }}>
+                          {/* Display Attempt 2 button */}
                           <button
                             className='l1t1-take-btn'
-                            onClick={() => fetchStudentById(student.id)}>
+                            onClick={() => fetchStudentById(student.id, 2)}>
                             Take
+                          </button>
+                          <button
+                            className='l1t1-take-btn'
+                            onClick={recordScore}
+                            disabled={disabled || attempts[student.id] === 4}>
+                            Record
+                          </button>
+                          <button
+                            className='l1t1-take-btn'
+                            onClick={handleSubmit}>
+                            Submit
                           </button>
                         </td>
                       </tr>
@@ -240,18 +387,6 @@ const L1Test1 = () => {
                   </tbody>
                 </table>
               </div>
-
-              <p style={{ height: "14px" }}>Your Score for this Quiz:</p>
-              <input
-                type='text'
-                value={score}
-                style={{
-                  textAlign: "center",
-                  height: "34px",
-                  fontSize: "28px",
-                }}
-                disabled
-              />
             </div>
           </div>
           <div className='quiz-items-wrapper'>
