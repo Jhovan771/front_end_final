@@ -165,18 +165,11 @@ const Student = () => {
           <table className='section-list'>
             <thead>
               <tr>
-                <th style={{ textAlign: "center" }}>#</th>
                 <th className='section-th' style={{ textAlign: "center" }}>
                   First Name
                 </th>
                 <th className='section-th' style={{ textAlign: "center" }}>
                   Last Name
-                </th>
-                <th className='section-th' style={{ textAlign: "center" }}>
-                  Section ID
-                </th>
-                <th className='section-th' style={{ textAlign: "center" }}>
-                  Grade
                 </th>
                 <th className='section-th' style={{ textAlign: "center" }}>
                   Menu
@@ -186,13 +179,8 @@ const Student = () => {
             <tbody>
               {studentData.map((student, index) => (
                 <tr key={student.id}>
-                  <td style={{ textAlign: "center" }}>{index + 1}</td>
                   <td style={{ textAlign: "center" }}>{student.firstName}</td>
                   <td style={{ textAlign: "center" }}>{student.lastName}</td>
-                  <td style={{ textAlign: "center" }}>{sectionID}</td>
-                  <td style={{ textAlign: "center" }}>
-                    {student.final_grade}%
-                  </td>
                   <td className='td-control'>
                     <button
                       className='final-class-btn'
