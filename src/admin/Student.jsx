@@ -172,6 +172,9 @@ const Student = () => {
                   Last Name
                 </th>
                 <th className='section-th' style={{ textAlign: "center" }}>
+                  Section ID
+                </th>
+                <th className='section-th' style={{ textAlign: "center" }}>
                   Menu
                 </th>
               </tr>
@@ -181,6 +184,7 @@ const Student = () => {
                 <tr key={student.id}>
                   <td style={{ textAlign: "center" }}>{student.firstName}</td>
                   <td style={{ textAlign: "center" }}>{student.lastName}</td>
+                  <td style={{ textAlign: "center" }}>{sectionID}</td>
                   <td className='td-control'>
                     <button
                       className='final-class-btn'
