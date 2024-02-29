@@ -4,7 +4,7 @@
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: 100%; /* Adjust the width as needed */
+  width: 80%; /* Adjust the width as needed */
   max-width: 600px; /* Set a maximum width if desired */
   height: 80%; /* Adjust the height as needed */
   max-height: 400px; /* Set a maximum height if desired */
@@ -21,4 +21,7 @@
 
 .close-btn:hover {
   color: #ff0000; /* Adjust the color of the button on hover as needed */
+}
+.hover-div:hover {
+  background-color: blue; /* Change the color to your desired hover color */
 }

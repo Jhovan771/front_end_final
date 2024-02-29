@@ -212,12 +212,21 @@ const L1Test1 = () => {
     return total;
   };
 
-  const handleSubmit = async () => {
-    if (selectedStudent) {
-      // Prompt the user to input the unit number and activity number
-      const unitNumber = prompt("Please enter the unit number:");
-      const activityNumber = prompt("Please enter the activity number:");
+  // -------- COPY STARTS HERE -------- //
+  useEffect(() => {
+    sessionStorage.setItem("unit", "1");
+    sessionStorage.setItem("act-num", "1");
+    sessionStorage.setItem("title", "The Crow and the Pitcher");
+  }, []);
 
+  const handleSubmit = async () => {
+    const title = sessionStorage.getItem("title");
+
+    if (selectedStudent) {
+      // const unitNumber = prompt("Please enter the unit number:");
+      // const activityNumber = prompt("Please enter the activity number:");
+      const unitNumber = sessionStorage.getItem("unit");
+      const activityNumber = sessionStorage.getItem("act-num");
       if (
         !unitNumber ||
         isNaN(unitNumber) ||
@@ -230,7 +239,6 @@ const L1Test1 = () => {
         return;
       }
 
-      // Fetch attempt scores and student ID
       const studentID = selectedStudent.id;
       const attemptScores = {};
       for (let i = 1; i <= 3; i++) {
@@ -240,17 +248,15 @@ const L1Test1 = () => {
         attemptScores[`attempt_${i}`] = attemptScore;
       }
 
-      // Calculate total score
       const total = calculateTotalScore(studentID);
 
-      // Log the data being passed to backend
       console.log("Submitting attempt scores for student:", studentID);
       console.log("Unit number:", unitNumber);
       console.log("Activity number:", activityNumber);
       console.log("Attempt scores:", attemptScores);
       console.log("Total score:", total);
+      console.log(title);
 
-      // Send attempt scores and total score to backend
       try {
         const response = await Axios.post(
           `${server_url}/api/storeAttemptScores`,
@@ -259,6 +265,7 @@ const L1Test1 = () => {
             unitNumber,
             activityNumber,
             attemptScores,
+            title,
           }
         );
         console.log("Response:", response.data);
@@ -269,6 +276,8 @@ const L1Test1 = () => {
       }
     }
   };
+
+  // ------- COPY ENDS HERE ------ //
 
   useEffect(() => {
     const fetchStudentData = async () => {

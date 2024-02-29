@@ -14,6 +14,7 @@ const Student = () => {
   const [chartData, setChartData] = useState({});
   const [selectedStudent, setSelectedStudent] = useState(null);
   const { sectionID } = useParams();
+  const [titles, setTitles] = useState([]);
 
   const fetchTotalScores = async (studentID) => {
     try {
@@ -30,6 +31,8 @@ const Student = () => {
           "Student info fetched successfully:",
           response.data.studentInfo
         );
+        const titles = response.data.totalScores.map((score) => score.title);
+        setTitles(titles);
         return response.data; // Return the entire response
       } else {
         throw new Error("Failed to fetch total scores");
@@ -206,36 +209,59 @@ const Student = () => {
         </div>
       </div>
       {isModalOpen && (
-        <div className='modal'>
-          <div className='modal-content'>
-            <div
-              className='close-btn'
-              onClick={closeModal}
-              style={{
-                width: "100%",
-                height: "44px",
-                display: "flex",
-                justifyContent: "end",
-                alignItems: "center",
-                fontSize: "38px",
-                cursor: "pointer",
-              }}>
-              &times;
-            </div>
-            {selectedStudent && (
-              <div>
-                <h2>
-                  {selectedStudent.firstName} {selectedStudent.lastName}
-                </h2>
-                <div className='chart-container'>
-                  {chartData[selectedStudent.id] ? (
-                    <Line data={chartData[selectedStudent.id]} />
-                  ) : (
-                    <div>No chart data available</div>
-                  )}
+        <div className='modal' style={{ width: "800px" }}>
+          <div
+            className='close-btn'
+            onClick={closeModal}
+            style={{
+              width: "100%",
+              height: "44px",
+              display: "flex",
+              justifyContent: "end",
+              alignItems: "center",
+              fontSize: "38px",
+              cursor: "pointer",
+            }}>
+            &times;
+          </div>
+          <div style={{ display: "flex" }}>
+            <div className='modal-content' style={{ width: "70%" }}>
+              {selectedStudent && (
+                <div>
+                  <h2>
+                    {selectedStudent.firstName} {selectedStudent.lastName}
+                  </h2>
+                  <div className='chart-container'>
+                    {chartData[selectedStudent.id] ? (
+                      <Line data={chartData[selectedStudent.id]} />
+                    ) : (
+                      <div>No chart data available</div>
+                    )}
+                  </div>
                 </div>
+              )}
+            </div>
+            <div
+              style={{
+                maxHeight: "40vh",
+                width: "30%",
+                overflow: "auto",
+              }}>
+              <h3>Activity Completed</h3>
+              <div>
+                {titles.map((title, index) => (
+                  <div
+                    className='hover-div'
+                    style={{
+                      borderBottom: "2px solid black",
+                      cursor: "pointer",
+                    }}
+                    key={index}>
+                    {title}
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}

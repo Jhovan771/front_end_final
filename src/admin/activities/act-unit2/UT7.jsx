@@ -232,11 +232,19 @@ const UT7 = () => {
     return total;
   };
 
+  // -------- COPY STARTS HERE -------- //
+  useEffect(() => {
+    sessionStorage.setItem("unit", "2");
+    sessionStorage.setItem("act-num", "7");
+    sessionStorage.setItem("title", "Kale");
+  }, []);
+
   const handleSubmit = async () => {
+    const title = sessionStorage.getItem("title");
+
     if (selectedStudent) {
-      // Prompt the user to input the unit number and activity number
-      const unitNumber = prompt("Please enter the unit number:");
-      const activityNumber = prompt("Please enter the activity number:");
+      const unitNumber = sessionStorage.getItem("unit");
+      const activityNumber = sessionStorage.getItem("act-num");
 
       if (
         !unitNumber ||
@@ -250,7 +258,6 @@ const UT7 = () => {
         return;
       }
 
-      // Fetch attempt scores and student ID
       const studentID = selectedStudent.id;
       const attemptScores = {};
       for (let i = 1; i <= 3; i++) {
@@ -260,17 +267,15 @@ const UT7 = () => {
         attemptScores[`attempt_${i}`] = attemptScore;
       }
 
-      // Calculate total score
       const total = calculateTotalScore(studentID);
 
-      // Log the data being passed to backend
       console.log("Submitting attempt scores for student:", studentID);
       console.log("Unit number:", unitNumber);
       console.log("Activity number:", activityNumber);
       console.log("Attempt scores:", attemptScores);
       console.log("Total score:", total);
+      console.log(title);
 
-      // Send attempt scores and total score to backend
       try {
         const response = await Axios.post(
           `${server_url}/api/storeAttemptScores`,
@@ -279,6 +284,7 @@ const UT7 = () => {
             unitNumber,
             activityNumber,
             attemptScores,
+            title,
           }
         );
         console.log("Response:", response.data);
@@ -289,6 +295,8 @@ const UT7 = () => {
       }
     }
   };
+
+  // ------- COPY ENDS HERE ------ //
 
   return (
     <div>
