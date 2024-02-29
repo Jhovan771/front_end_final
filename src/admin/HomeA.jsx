@@ -20,7 +20,6 @@ const HomeA = () => {
                 spelled is a spark.
               </p>
             </div>
-            <button className='btn'>Start Class</button>
           </div>
           <img src={lg} className='img-wrapper' />
         </div>
