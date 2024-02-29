@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { React, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import NavA from "../NavA";
 import Axios from "axios";
@@ -18,6 +18,7 @@ const L1Test1 = () => {
   const [score, setScore] = useState(0);
   const [attempts, setAttempts] = useState({});
   const [disabled, setDisabled] = useState(false);
+  const [attemptScores, setAttemptScores] = useState([]);
 
   useEffect(() => {
     const allItemsAnswered = quizItemsCorrectness.every((item) => item !== "");
@@ -102,22 +103,7 @@ const L1Test1 = () => {
     });
   };
 
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const response = await Axios.get(
-          `${server_url}/api/studentList?sectionID=${sectionID}`
-        );
-        setStudentData(response.data);
-      } catch (error) {
-        console.error(error);
-        alert("An error occurred while fetching student data.");
-      }
-    };
-    fetchStudentData();
-  }, [sectionID]);
-
-  const fetchStudentById = async (studentID) => {
+  const fetchStudentById = async (studentID, maxAttempts) => {
     try {
       console.log("Fetching student by ID:", studentID);
 
@@ -135,30 +121,30 @@ const L1Test1 = () => {
       const currentAttempt = (attempts[studentID] || 0) + 1; // Get the current attempt
       console.log("Current attempt for student:", currentAttempt);
 
+      const attemptsLeft = maxAttempts - currentAttempt;
+      if (attemptsLeft > 0) {
+        alert(`You have ${attemptsLeft} attempts left.`);
+      } else {
+        alert("Maximum attempts reached for this student.");
+        console.log("Maximum attempts reached for student:", studentID);
+      }
+
       const response = await Axios.get(
         `${server_url}/api/student?studentID=${studentID}`
       );
       setSelectedStudent(response.data);
 
-      // Check number of attempts and disable "Take" button accordingly
-      if (currentAttempt >= 4) {
-        alert("Maximum attempts reached for this student.");
-        console.log("Maximum attempts reached for student:", studentID);
-        return;
-      }
-
       setAttempts((prevAttempts) => ({
         ...prevAttempts,
-        [studentID]: currentAttempt, // Update the attempt count for the selected student
+        [studentID]: currentAttempt,
       }));
 
-      if (currentAttempt >= 4 || score >= 4) {
-        setDisabled(true);
-        console.log("Record button disabled");
-      } else {
-        // Enable the record button if attempts are not maxed out and score is less than 3
-        setDisabled(false);
-        console.log("Record button enabled");
+      if (currentAttempt >= maxAttempts) {
+        console.log("Maximum attempts reached for student:", studentID);
+      }
+
+      if (score >= maxAttempts) {
+        console.log("Maximum score reached for student:", studentID);
       }
     } catch (error) {
       console.error(error);
@@ -179,32 +165,26 @@ const L1Test1 = () => {
   };
 
   const recordScore = () => {
-    if (!selectedStudent) return; // Ensure a student is selected
+    if (!selectedStudent) return;
 
     console.log("Recording score for student:", selectedStudent.id);
 
     const currentAttempts = attempts[selectedStudent.id];
 
-    // Check if attempts are maxed out or score is 3 or above for the selected student
     if (currentAttempts >= 4 || score >= 4) {
       setDisabled(true);
       console.log("Attempts maxed out or score >= 3");
     } else {
-      // Increment attempts if not maxed out for the selected student
       const newAttempts = currentAttempts + 0;
 
-      // Calculate the new score only if it's less than 3 for the selected student
       const newScore = score;
-      const scorePercentage = (newScore / 4) * 100;
+      const scorePercentage = newScore;
 
-      // Store the new score percentage for the current attempt in local storage
       console.log("Storing new score in local storage:", scorePercentage);
       localStorage.setItem(
         `${selectedStudent.id}_attempt_${newAttempts}`,
         scorePercentage
       );
-
-      // Update the state with new score and attempt count
       setAttempts((prevAttempts) => ({
         ...prevAttempts,
         [selectedStudent.id]: newAttempts,
@@ -219,9 +199,104 @@ const L1Test1 = () => {
     }
   };
 
-  const handleSubmit = () => {
-    alert("Successfully submitted. Everything up to date.");
+  const calculateTotalScore = (studentID) => {
+    let total = 0;
+    for (let i = 1; i <= 3; i++) {
+      const attemptScore = parseInt(
+        localStorage.getItem(`${studentID}_attempt_${i}`) || 0
+      );
+      total += attemptScore;
+    }
+    return total;
   };
+
+  const handleSubmit = async () => {
+    if (selectedStudent) {
+      // Prompt the user to input the unit number and activity number
+      const unitNumber = prompt("Please enter the unit number:");
+      const activityNumber = prompt("Please enter the activity number:");
+
+      if (
+        !unitNumber ||
+        isNaN(unitNumber) ||
+        !activityNumber ||
+        isNaN(activityNumber)
+      ) {
+        alert(
+          "Invalid input. Please enter valid numbers for unit and activity."
+        );
+        return;
+      }
+
+      // Fetch attempt scores and student ID
+      const studentID = selectedStudent.id;
+      const attemptScores = {};
+      for (let i = 1; i <= 3; i++) {
+        const attemptScore = parseInt(
+          localStorage.getItem(`${studentID}_attempt_${i}`) || 0
+        );
+        attemptScores[`attempt_${i}`] = attemptScore;
+      }
+
+      // Calculate total score
+      const total = calculateTotalScore(studentID);
+
+      // Log the data being passed to backend
+      console.log("Submitting attempt scores for student:", studentID);
+      console.log("Unit number:", unitNumber);
+      console.log("Activity number:", activityNumber);
+      console.log("Attempt scores:", attemptScores);
+      console.log("Total score:", total);
+
+      // Send attempt scores and total score to backend
+      try {
+        const response = await Axios.post(
+          `${server_url}/api/storeAttemptScores`,
+          {
+            studentID,
+            unitNumber,
+            activityNumber,
+            attemptScores,
+          }
+        );
+        console.log("Response:", response.data);
+        alert("Successfully submitted. Everything up to date.");
+      } catch (error) {
+        console.error("Error submitting attempt scores:", error);
+        alert("An error occurred while sending attempt scores to the server.");
+      }
+    }
+  };
+
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const response = await Axios.get(
+          `${server_url}/api/studentList?sectionID=${sectionID}`
+        );
+        setStudentData(response.data);
+      } catch (error) {
+        console.error(error);
+        alert("An error occurred while fetching student data.");
+      }
+    };
+
+    const fetchAttemptScores = async () => {
+      try {
+        const response = await Axios.get(
+          `${server_url}/api/attemptScoresByMaxActId`
+        );
+        console.log("Attempt scores received from backend:", response.data);
+        setAttemptScores(response.data);
+      } catch (error) {
+        console.error(error);
+        alert("An error occurred while fetching attempt scores.");
+      }
+    };
+
+    fetchStudentData();
+    fetchAttemptScores();
+  }, [sectionID]);
 
   return (
     <div>
@@ -265,99 +340,12 @@ const L1Test1 = () => {
                   <tbody style={{ msOverflowY: "auto" }}>
                     {studentData.map((student, index) => (
                       <tr key={student.id}>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            backgroundColor: "white",
-                            color: "black",
-                          }}>
-                          {index + 1}
-                        </td>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            backgroundColor: "white",
-                            color: "black",
-                          }}>
-                          {student.firstName}
-                        </td>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            backgroundColor: "white",
-                            color: "black",
-                          }}>
-                          {student.lastName}
-                        </td>
-                        <td>
-                          <td
-                            style={{
-                              textAlign: "center",
-                              backgroundColor: "white",
-                              color: "black",
-                              display: "flex",
-                              width: "100%",
-                            }}>
-                            {/* Display Attempt 1 score */}
-                            <div className='progress-bar'>
-                              {console.log(
-                                "Attempt 1 score:",
-                                localStorage.getItem(`${student.id}_attempt_1`)
-                              )}
-                              {`${
-                                localStorage.getItem(
-                                  `${student.id}_attempt_1`
-                                ) || 0
-                              }%`}
-                            </div>
-                          </td>
-                        </td>
-                        <td>
-                          <td
-                            style={{
-                              textAlign: "center",
-                              backgroundColor: "white",
-                              color: "black",
-                              display: "flex",
-                              width: "100%",
-                            }}>
-                            {/* Display Attempt 2 score */}
-                            <div className='progress-bar'>
-                              {console.log(
-                                "Attempt 2 score:",
-                                localStorage.getItem(`${student.id}_attempt_2`)
-                              )}
-                              {`${
-                                localStorage.getItem(
-                                  `${student.id}_attempt_2`
-                                ) || 0
-                              }%`}
-                            </div>
-                          </td>
-                        </td>
-                        <td>
-                          <td
-                            style={{
-                              textAlign: "center",
-                              backgroundColor: "white",
-                              color: "black",
-                              display: "flex",
-                              width: "100%",
-                            }}>
-                            {/* Display Attempt 3 score */}
-                            <div className='progress-bar'>
-                              {console.log(
-                                "Attempt 3 score:",
-                                localStorage.getItem(`${student.id}_attempt_3`)
-                              )}
-                              {`${
-                                localStorage.getItem(
-                                  `${student.id}_attempt_3`
-                                ) || 0
-                              }%`}
-                            </div>
-                          </td>
-                        </td>
+                        <td>{index + 1}</td>
+                        <td>{student.firstName}</td>
+                        <td>{student.lastName}</td>
+                        <td>{attemptScores[index]?.attempt_one || 0}</td>
+                        <td>{attemptScores[index]?.attempt_two || 0}</td>
+                        <td>{attemptScores[index]?.attempt_three || 0}</td>
                         <td
                           style={{
                             textAlign: "center",
@@ -367,7 +355,7 @@ const L1Test1 = () => {
                           {/* Display Attempt 2 button */}
                           <button
                             className='l1t1-take-btn'
-                            onClick={() => fetchStudentById(student.id, 2)}>
+                            onClick={() => fetchStudentById(student.id, 3)}>
                             Take
                           </button>
                           <button

@@ -1,50 +1,114 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Axios from "axios";
 import NavA from "./NavA";
+import { Line } from "react-chartjs-2";
 
 const server_url = import.meta.env.VITE_SERVER_LINK;
 
 const Student = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [editStudentId, setEditStudentId] = useState(null);
-  const { sectionID } = useParams();
   const [studentData, setStudentData] = useState([]);
-  const [editFirstName, setEditFirstName] = useState("");
-  const [editLastName, setEditLastName] = useState("");
-  const [editSectionID, setEditSectionID] = useState("");
+  const [totalScores, setTotalScores] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [chartData, setChartData] = useState({});
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const { sectionID } = useParams();
 
-  const closeEditModal = () => {
-    setIsEditModalVisible(false);
+  const fetchTotalScores = async (studentID) => {
+    try {
+      console.log("Fetching total scores for student ID:", studentID);
+      const response = await Axios.get(
+        `${server_url}/api/studentTotalScores?studentId=${studentID}`
+      );
+      if (response.status === 200) {
+        console.log(
+          "Total scores fetched successfully:",
+          response.data.totalScores
+        );
+        console.log(
+          "Student info fetched successfully:",
+          response.data.studentInfo
+        );
+        return response.data; // Return the entire response
+      } else {
+        throw new Error("Failed to fetch total scores");
+      }
+    } catch (error) {
+      console.error("Error fetching total scores:", error.message);
+      return {}; // Return an empty object on error
+    }
   };
 
-  useEffect(() => {
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && isEditModalVisible) {
-        closeEditModal();
-      }
-    });
+  const updateChart = async (studentID) => {
+    try {
+      console.log("Updating chart for student ID:", studentID);
 
-    return () => {
-      document.removeEventListener("keydown", closeEditModal);
-    };
-  }, [isEditModalVisible]);
+      // Fetch total scores for the student
+      const response = await fetchTotalScores(studentID);
+      console.log("Response from fetchTotalScores:", response);
+
+      // Ensure the response contains the expected data
+      if (
+        response &&
+        Array.isArray(response.totalScores) &&
+        response.totalScores.length > 0 &&
+        response.studentInfo
+      ) {
+        // Extract totalScores and studentInfo from the response
+        const { totalScores, studentInfo } = response;
+
+        // Update local state with totalScores
+        setTotalScores(totalScores);
+
+        // Construct newChartData object for chart display
+        const newChartData = {
+          labels: totalScores.map(
+            (score) =>
+              `Activity ${score.activityNumber} - Unit ${score.unitNumber}`
+          ),
+          datasets: [
+            {
+              label: `${studentInfo.firstName} ${studentInfo.lastName}'s Personal Progress`,
+              data: totalScores.map((score) => score.totalScore),
+              fill: false,
+              borderColor: "rgb(75, 192, 192)",
+              tension: 0.1,
+            },
+          ],
+        };
+
+        console.log("New chart data:", newChartData);
+
+        // Update chartData state with new chart data for the specific student
+        setChartData((prevChartData) => ({
+          ...prevChartData,
+          [studentID]: newChartData,
+        }));
+      } else {
+        console.error("Total scores or student info is empty");
+      }
+    } catch (error) {
+      console.error("Error updating chart data:", error.message);
+    }
+  };
 
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        // Fetch student data
+        console.log("Fetching student data for section ID:", sectionID);
         const response = await Axios.get(
           `${server_url}/api/studentList?sectionID=${sectionID}`
         );
-        setStudentData(response.data);
+        console.log("Student data fetched successfully:", response.data);
 
-        // Compute final grades and fetch updated student data
-        await Axios.get(`${server_url}/api/computeFinalGrades`);
-        const updatedResponse = await Axios.get(
-          `${server_url}/api/studentList?sectionID=${sectionID}`
-        );
-        setStudentData(updatedResponse.data);
+        // Check if student data is not empty
+        if (response.data.length > 0) {
+          setStudentData(response.data);
+          await updateChart(response.data[0].id);
+        } else {
+          console.error("Student data is empty");
+        }
       } catch (error) {
         console.error(error);
         alert("An error occurred while fetching student data");
@@ -54,119 +118,48 @@ const Student = () => {
     fetchStudentData();
   }, [sectionID]);
 
-  const openEditModal = (id) => {
-    setEditStudentId(id);
-    setIsEditModalVisible(true);
-    const studentToEdit = studentData.find((student) => student.id === id);
-    if (studentToEdit) {
-      setEditFirstName(studentToEdit.firstName);
-      setEditLastName(studentToEdit.lastName);
-      setEditSectionID(studentToEdit.sectionID);
-    }
-  };
-
   const deleteStudent = async (id) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this student?"
-    );
-    if (confirmed) {
-      try {
-        const response = await Axios.delete(
-          `${server_url}/api/studentData/${id}`
-        );
-
-        if (response.status === 204) {
-          alert("Student Deleted Successfully.");
-        } else {
-          alert("Success Deleting Student.");
-        }
-      } catch (error) {
-        console.log(error);
-        alert("An error occurred while deleting the student.");
-      } finally {
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      }
-    }
-  };
-
-  const updateStudent = async () => {
+    // Implement delete functionality here
     try {
-      const response = await Axios.put(
-        `${server_url}/api/studentData/${editStudentId}`,
-        {
-          firstName: editFirstName,
-          lastName: editLastName,
-          sectionID: editSectionID,
-        }
+      const response = await Axios.delete(
+        `${server_url}/api/studentData/${id}`
       );
 
-      if (response.status === 200) {
-        alert("Student Updated Successfully.");
+      if (response.status === 204) {
+        alert("Student Deleted Successfully.");
       } else {
-        alert("Success Updating Student.");
+        alert("Success Deleting Student.");
       }
     } catch (error) {
-      console.error(error);
-      alert("An error occurred while updating the student.");
+      console.log(error);
+      alert("An error occurred while deleting the student.");
     } finally {
-      setIsEditModalVisible(false);
       setTimeout(() => {
         window.location.reload();
       }, 500);
     }
   };
 
+  const openModal = async (studentId) => {
+    // Update the state with the student ID
+    setIsModalOpen(true);
+    // Update the chart data for the selected student
+    await updateChart(studentId);
+    // Find and set the selected student
+    const student = studentData.find((student) => student.id === studentId);
+    if (student) {
+      setSelectedStudent(student);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
   return (
     <div>
       <NavA />
       <div className='addlist-main'>
-        <div className='edit-student-to-section'>
-          <h3 className='add-new-student-header'>Update Student Data</h3>
-          <label className='add-new-student-content' htmlFor='fname'>
-            First Name :
-          </label>
-          <input
-            autoComplete='off'
-            type='text'
-            id='fname'
-            name='fname'
-            value={editFirstName}
-            onChange={(e) => setEditFirstName(e.target.value)}
-            style={{ textAlign: "center" }}
-          />
-          <label className='add-new-student-content' htmlFor='lname'>
-            Last Name :
-          </label>
-          <input
-            autoComplete='off'
-            type='text'
-            id='lname'
-            name='lname'
-            value={editLastName}
-            onChange={(e) => setEditLastName(e.target.value)}
-            style={{ textAlign: "center" }}
-          />
-          <label className='add-new-student-content' htmlFor='sectionID'>
-            Assign to Section :
-          </label>
-          <input
-            autoComplete='off'
-            type='text'
-            id='sectionID'
-            name='sectionID'
-            value={editSectionID}
-            onChange={(e) => setEditSectionID(e.target.value)}
-            disabled
-            style={{ textAlign: "center" }}
-          />
-          <div className='button-for-new-student-submission'>
-            <button className='submit-new-student' onClick={updateStudent}>
-              Submit
-            </button>
-          </div>
-        </div>
         <div className='class-starter'></div>
         <div className='addlist-wrapper'>
           <table className='section-list'>
@@ -202,12 +195,12 @@ const Student = () => {
                   </td>
                   <td className='td-control'>
                     <button
-                      className='btn-edit'
-                      onClick={() => openEditModal(student.id)}>
-                      Edit
+                      className='final-class-btn'
+                      onClick={() => openModal(student.id)}>
+                      View
                     </button>
                     <button
-                      className='btn-delete'
+                      className='final-class-btn'
                       onClick={() => deleteStudent(student.id)}>
                       Delete
                     </button>
@@ -218,6 +211,29 @@ const Student = () => {
           </table>
         </div>
       </div>
+      {isModalOpen && (
+        <div className='modal'>
+          <div className='modal-content'>
+            <span className='close' onClick={closeModal}>
+              &times;
+            </span>
+            {selectedStudent && (
+              <div>
+                <h2>
+                  {selectedStudent.firstName} {selectedStudent.lastName}
+                </h2>
+                <div className='chart-container'>
+                  {chartData[selectedStudent.id] ? (
+                    <Line data={chartData[selectedStudent.id]} />
+                  ) : (
+                    <div>No chart data available</div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

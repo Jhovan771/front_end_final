@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import NavA from "./NavA";
 import setting from "../assets/settig.png";
 import Axios from "axios";
-import Setting from "../assets/setting.png";
 import { Link } from "react-router-dom";
 
 const server_url = import.meta.env.VITE_SERVER_LINK;
@@ -278,11 +277,6 @@ const Dashboard = () => {
                     <Link to={`/student/${section.sectionID}`}>
                       <button className='final-class-btn'>View</button>
                     </Link>
-                    <button
-                      className='final-class-btn'
-                      onClick={() => openEditModal(section.sname)}>
-                      Edit
-                    </button>
                     <button
                       className='final-class-btn'
                       onClick={() => deleteSection(section.sname)}>
