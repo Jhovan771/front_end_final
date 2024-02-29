@@ -165,6 +165,7 @@ const Student = () => {
           <table className='section-list'>
             <thead>
               <tr>
+                <th style={{ textAlign: "center" }}>#</th>
                 <th className='section-th' style={{ textAlign: "center" }}>
                   First Name
                 </th>
@@ -182,6 +183,7 @@ const Student = () => {
             <tbody>
               {studentData.map((student, index) => (
                 <tr key={student.id}>
+                  <td style={{ textAlign: "center" }}>{index + 1}</td>
                   <td style={{ textAlign: "center" }}>{student.firstName}</td>
                   <td style={{ textAlign: "center" }}>{student.lastName}</td>
                   <td style={{ textAlign: "center" }}>{sectionID}</td>
