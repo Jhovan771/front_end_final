@@ -335,7 +335,6 @@ const UT2 = () => {
                 <table className='class-test-table'>
                   <thead>
                     <tr>
-                      <th>ID</th>
                       <th>First Name</th>
                       <th>Last Name</th>
                       <th>Attempt 1</th>
@@ -347,7 +346,6 @@ const UT2 = () => {
                   <tbody style={{ msOverflowY: "auto" }}>
                     {studentData.map((student, index) => (
                       <tr key={student.id}>
-                        <td>{index + 1}</td>
                         <td>{student.firstName}</td>
                         <td>{student.lastName}</td>
                         <td>{attemptScores[index]?.attempt_one || 0}</td>

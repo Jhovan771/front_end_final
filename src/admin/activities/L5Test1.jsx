@@ -343,7 +343,6 @@ const L5Test1 = () => {
                 <table className='class-test-table'>
                   <thead>
                     <tr>
-                      <th>ID</th>
                       <th>First Name</th>
                       <th>Last Name</th>
                       <th>Attempt 1</th>
@@ -355,14 +354,6 @@ const L5Test1 = () => {
                   <tbody style={{ msOverflowY: "auto" }}>
                     {studentData.map((student, index) => (
                       <tr key={student.id}>
-                        <td
-                          style={{
-                            textAlign: "center",
-                            backgroundColor: "white",
-                            color: "black",
-                          }}>
-                          {index + 1}
-                        </td>
                         <td
                           style={{
                             textAlign: "center",
