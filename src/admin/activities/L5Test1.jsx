@@ -336,7 +336,7 @@ const L5Test1 = () => {
                 <button
                   className='class-test-button-control'
                   onClick={readAloud}>
-                  Read Aloud
+                  Listen
                 </button>
               </div>
               <div className='class-test-box-4'>

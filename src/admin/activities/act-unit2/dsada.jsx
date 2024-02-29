@@ -1,13 +1,13 @@
-import { React, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import NavA from "../NavA";
+import NavA from "../../NavA";
 import Axios from "axios";
-import Testbar from "./Testbar";
+import Testbar2 from "./act-unit2-bar/Testbar2";
 
 const server_url = import.meta.env.VITE_SERVER_LINK;
 
-const L1Test1 = () => {
-  const wordData = ["Sunny", "Found", "Thirsty", "Water"];
+const UT9 = () => {
+  const wordData = ["Phone", "Globe", "Stone", "Problem"];
   const [quizItemsCorrectness, setQuizItemsCorrectness] = useState(
     Array(wordData.length).fill("")
   );
@@ -16,9 +16,6 @@ const L1Test1 = () => {
   const { sectionID } = useParams();
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [score, setScore] = useState(0);
-  const [attempts, setAttempts] = useState({});
-  const [disabled, setDisabled] = useState(false);
-  const [attemptScores, setAttemptScores] = useState([]);
 
   useEffect(() => {
     const allItemsAnswered = quizItemsCorrectness.every((item) => item !== "");
@@ -80,8 +77,9 @@ const L1Test1 = () => {
     }
   };
 
+  // wllplyd
   let textToRead =
-    "Once, on a sunny day, a crow found a pitcher. The crow was thirsty. It used a stone to drop into the pitcher and get the water it needed.";
+    "When Horsey took over the throne of his kingdom shaped like a cone. He called his friends by phone to visit him in the palace. That was now his home. He wanted to show them his golden robe and the many gifts sent him. From other kingdoms around the globe. The one that he liked best of all was a magic stove. Horsey's friens sent a return note which all three of them wrote. They could not leave their families alone. No rain had fallen on thier zone. No crops were grown on the earth hard as stone. Horsey told his friends not to fear he would ask kingdoms far and near. For help, and when they hear about the problem, they would answer 'Yes!' loud and clear. The magic stove they could use to cook whatever food they choose. The stove would double food cooked in it. So, there would be more than enough for many people to eat.";
 
   const readAloud = () => {
     const speechSynthesis = window.speechSynthesis;
@@ -103,49 +101,34 @@ const L1Test1 = () => {
     });
   };
 
-  const fetchStudentById = async (studentID, maxAttempts) => {
-    try {
-      console.log("Fetching student by ID:", studentID);
-
-      if (selectedStudent) {
-        console.log(
-          "Updating total score for previous student:",
-          selectedStudent.id
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const response = await Axios.get(
+          `${server_url}/api/studentList?sectionID=${sectionID}`
         );
+        setStudentData(response.data);
+      } catch (error) {
+        console.error(error);
+        alert("An error occurred while fetching student data.");
+      }
+    };
+    fetchStudentData();
+  }, [sectionID]);
+
+  const fetchStudentById = async (studentID) => {
+    try {
+      if (selectedStudent) {
         updateTotalScore(selectedStudent.id, score);
       }
 
       setScore(0);
       setQuizItemsCorrectness(Array(wordData.length).fill(""));
 
-      const currentAttempt = (attempts[studentID] || 0) + 1; // Get the current attempt
-      console.log("Current attempt for student:", currentAttempt);
-
-      const attemptsLeft = maxAttempts - currentAttempt;
-      if (attemptsLeft > 0) {
-        alert(`You have ${attemptsLeft} attempts left.`);
-      } else {
-        alert("Maximum attempts reached for this student.");
-        console.log("Maximum attempts reached for student:", studentID);
-      }
-
       const response = await Axios.get(
         `${server_url}/api/student?studentID=${studentID}`
       );
       setSelectedStudent(response.data);
-
-      setAttempts((prevAttempts) => ({
-        ...prevAttempts,
-        [studentID]: currentAttempt,
-      }));
-
-      if (currentAttempt >= maxAttempts) {
-        console.log("Maximum attempts reached for student:", studentID);
-      }
-
-      if (score >= maxAttempts) {
-        console.log("Maximum score reached for student:", studentID);
-      }
     } catch (error) {
       console.error(error);
       alert("An error occurred while fetching student data.");
@@ -164,166 +147,47 @@ const L1Test1 = () => {
     }
   };
 
-  const recordScore = () => {
-    if (!selectedStudent) return;
-
-    console.log("Recording score for student:", selectedStudent.id);
-
-    const currentAttempts = attempts[selectedStudent.id] || 0;
-
-    if (currentAttempts >= 4 || score >= 4) {
-      setDisabled(true);
-      console.log("Attempts maxed out or score >= 3");
-      alert("Maximum attempts reached or maximum score achieved!");
-    } else {
-      const newAttempts = currentAttempts + 1;
-
-      const newScore = score;
-      const scorePercentage = newScore;
-
-      console.log("Storing new score in local storage:", scorePercentage);
-      localStorage.setItem(
-        `${selectedStudent.id}_attempt_${newAttempts}`,
-        scorePercentage
-      );
-      setAttempts((prevAttempts) => ({
-        ...prevAttempts,
-        [selectedStudent.id]: newAttempts,
-      }));
-      setScore(newScore);
-
-      console.log("Updated score:", newScore);
-
-      if (newAttempts >= 4) {
-        setDisabled(true);
-        alert("Maximum attempts reached!");
-      }
-    }
-  };
-
-  const calculateTotalScore = (studentID) => {
-    let total = 0;
-    for (let i = 1; i <= 3; i++) {
-      const attemptScore = parseInt(
-        localStorage.getItem(`${studentID}_attempt_${i}`) || 0
-      );
-      total += attemptScore;
-    }
-    return total;
-  };
-
-  const handleSubmit = async () => {
-    if (selectedStudent) {
-      // Prompt the user to input the unit number and activity number
-      const unitNumber = prompt("Please enter the unit number:");
-      const activityNumber = prompt("Please enter the activity number:");
-
-      if (
-        !unitNumber ||
-        isNaN(unitNumber) ||
-        !activityNumber ||
-        isNaN(activityNumber)
-      ) {
-        alert(
-          "Invalid input. Please enter valid numbers for unit and activity."
-        );
-        return;
-      }
-
-      // Fetch attempt scores and student ID
-      const studentID = selectedStudent.id;
-      const attemptScores = {};
-      for (let i = 1; i <= 3; i++) {
-        const attemptScore = parseInt(
-          localStorage.getItem(`${studentID}_attempt_${i}`) || 0
-        );
-        attemptScores[`attempt_${i}`] = attemptScore;
-      }
-
-      // Calculate total score
-      const total = calculateTotalScore(studentID);
-
-      // Log the data being passed to backend
-      console.log("Submitting attempt scores for student:", studentID);
-      console.log("Unit number:", unitNumber);
-      console.log("Activity number:", activityNumber);
-      console.log("Attempt scores:", attemptScores);
-      console.log("Total score:", total);
-
-      // Send attempt scores and total score to backend
-      try {
-        const response = await Axios.post(
-          `${server_url}/api/storeAttemptScores`,
-          {
-            studentID,
-            unitNumber,
-            activityNumber,
-            attemptScores,
-          }
-        );
-        console.log("Response:", response.data);
-        alert("Successfully submitted. Everything up to date.");
-      } catch (error) {
-        console.error("Error submitting attempt scores:", error);
-        alert("An error occurred while sending attempt scores to the server.");
-      }
-    }
-  };
-
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const response = await Axios.get(
-          `${server_url}/api/studentList?sectionID=${sectionID}`
-        );
-        setStudentData(response.data);
-      } catch (error) {
-        console.error(error);
-        alert("An error occurred while fetching student data.");
-      }
-    };
-
-    const fetchAttemptScores = async () => {
-      try {
-        const response = await Axios.get(
-          `${server_url}/api/attemptScoresByMaxActId`
-        );
-        console.log("Attempt scores received from backend:", response.data);
-        setAttemptScores(response.data);
-      } catch (error) {
-        console.error(error);
-        alert("An error occurred while fetching attempt scores.");
-      }
-    };
-
-    fetchStudentData();
-    fetchAttemptScores();
-  }, [sectionID]);
-
   return (
     <div>
       <NavA />
       <div className='class-section-main'>
         <div className='class-section-wrapper'>
           <div className='class-section-sidebar'>
-            <Testbar />
+            <Testbar2 />
           </div>
           <div className='class-section-content'>
             <div className='class-test-main-wrapper'>
-              <div className='class-test-box-1'>The Crow and the Pitcher</div>
+              {/* wllplyd */}
+              <div className='class-test-box-1'>Horsey, the King</div>
               <div className='class-test-box-2'>
-                Once, on a <span className='words-controller'>sunny</span> day,
-                a crow <span className='words-controller'>found</span> a
-                pitcher. The crow was{" "}
-                <span className='words-controller'>thirsty</span>. It used a
-                stone to drop into the pitcher and get the{" "}
-                <span className='words-controller'>water</span> it needed.
+                When Horsey took over the throne of his kingdom shaped like a
+                cone. He called his friends by{" "}
+                <span className='words-controller'>phone</span> to visit him in
+                the palace. That was now his home. He wanted to show them his
+                golden robe and the many gifts sent him. From other kingdoms
+                around the <span className='words-controller'>globe</span>. The
+                one that he liked best of all was a magic{" "}
+                <span className='words-controller'>stove</span>. Horsey's
+                friends sent a return note which all three of them wrote. They
+                could not leave their families alone. No rain had fallen on
+                their zone. No crops were grown on the earth hard as{" "}
+                <span className='words-controller'>stone</span>. Horsey told his
+                friends not to fear he would ask kingdoms far and near. For
+                help, and when they hear about the{" "}
+                <span className='words-controller'>problem</span>, they would
+                answer 'Yes!' loud and clear. The magic{" "}
+                <span className='words-controller'>stove</span> they could use
+                to cook whatever food they choose. The{" "}
+                <span className='words-controller'>stove</span> would double
+                food cooked in it. So, there would be more than enough for many
+                people to eat.
               </div>
+
               <div className='class-test-box-3'>
                 <button
                   className='class-test-button-control'
                   onClick={readAloud}>
-                  Listen
+                  Read Aloud
                 </button>
               </div>
               <div className='class-test-box-4'>
@@ -333,43 +197,60 @@ const L1Test1 = () => {
                       <th>ID</th>
                       <th>First Name</th>
                       <th>Last Name</th>
-                      <th>Attempt 1</th>
-                      <th>Attempt 2</th>
-                      <th>Attempt 3</th>
+                      <th>%</th>
                       <th>Menu</th>
                     </tr>
                   </thead>
-                  <tbody style={{ msOverflowY: "auto" }}>
+                  <tbody>
                     {studentData.map((student, index) => (
                       <tr key={student.id}>
-                        <td>{index + 1}</td>
-                        <td>{student.firstName}</td>
-                        <td>{student.lastName}</td>
-                        <td>{attemptScores[index]?.attempt_one || 0}</td>
-                        <td>{attemptScores[index]?.attempt_two || 0}</td>
-                        <td>{attemptScores[index]?.attempt_three || 0}</td>
                         <td
                           style={{
                             textAlign: "center",
                             backgroundColor: "white",
                             color: "black",
                           }}>
-                          {/* Display Attempt 2 button */}
+                          {index + 1}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "center",
+                            backgroundColor: "white",
+                            color: "black",
+                          }}>
+                          {student.firstName}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "center",
+                            backgroundColor: "white",
+                            color: "black",
+                          }}>
+                          {student.lastName}
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "center",
+                            backgroundColor: "white",
+                            color: "black",
+                            display: "flex",
+                            height: "100%",
+                          }}>
+                          {/* wllplyd */}
+                          <div className='progress-bar'>{`${
+                            (student.total_score / 120) * 100
+                          }%`}</div>
+                        </td>
+                        <td
+                          style={{
+                            textAlign: "center",
+                            backgroundColor: "white",
+                            color: "black",
+                          }}>
                           <button
                             className='l1t1-take-btn'
-                            onClick={() => fetchStudentById(student.id, 3)}>
+                            onClick={() => fetchStudentById(student.id)}>
                             Take
-                          </button>
-                          <button
-                            className='l1t1-take-btn'
-                            onClick={recordScore}
-                            disabled={disabled || attempts[student.id] === 4}>
-                            Record
-                          </button>
-                          <button
-                            className='l1t1-take-btn'
-                            onClick={handleSubmit}>
-                            Submit
                           </button>
                         </td>
                       </tr>
@@ -377,6 +258,17 @@ const L1Test1 = () => {
                   </tbody>
                 </table>
               </div>
+              <p style={{ height: "14px" }}>Your Score for this Quiz:</p>
+              <input
+                type='text'
+                value={score}
+                style={{
+                  textAlign: "center",
+                  height: "34px",
+                  fontSize: "28px",
+                }}
+                disabled
+              />
             </div>
           </div>
           <div className='quiz-items-wrapper'>
@@ -440,4 +332,4 @@ const L1Test1 = () => {
   );
 };
 
-export default L1Test1;
+export default UT9;

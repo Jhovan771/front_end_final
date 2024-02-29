@@ -187,8 +187,7 @@ const L2Test1 = () => {
       setScore(0);
       setQuizItemsCorrectness(Array(wordData.length).fill(""));
 
-      // Get the current attempt for the selected student
-      const currentAttempt = attempts[studentID] || 0;
+      const currentAttempt = (attempts[studentID] || 0) + 1; // Get the current attempt
       console.log("Current attempt for student:", currentAttempt);
 
       const attemptsLeft = maxAttempts - currentAttempt;
@@ -204,12 +203,10 @@ const L2Test1 = () => {
       );
       setSelectedStudent(response.data);
 
-      if (currentAttempt < maxAttempts) {
-        setAttempts((prevAttempts) => ({
-          ...prevAttempts,
-          [studentID]: currentAttempt + 1,
-        }));
-      }
+      setAttempts((prevAttempts) => ({
+        ...prevAttempts,
+        [studentID]: currentAttempt,
+      }));
 
       if (currentAttempt >= maxAttempts) {
         console.log("Maximum attempts reached for student:", studentID);
@@ -319,7 +316,7 @@ const L2Test1 = () => {
                 <button
                   className='class-test-button-control'
                   onClick={readAloud}>
-                  Read Aloud
+                  Listen
                 </button>
               </div>
               <div className='class-test-box-4'>

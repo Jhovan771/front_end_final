@@ -214,9 +214,20 @@ const Student = () => {
       {isModalOpen && (
         <div className='modal'>
           <div className='modal-content'>
-            <span className='close' onClick={closeModal}>
+            <div
+              className='close-btn'
+              onClick={closeModal}
+              style={{
+                width: "100%",
+                height: "44px",
+                display: "flex",
+                justifyContent: "end",
+                alignItems: "center",
+                fontSize: "38px",
+                cursor: "pointer",
+              }}>
               &times;
-            </span>
+            </div>
             {selectedStudent && (
               <div>
                 <h2>
